@@ -48,3 +48,78 @@ def discover_files(
 
     return sorted(discovered)
 
+
+def build_file_records(target_dir: Path, files: list[Path]) -> tuple[list[FileRecord], list[str]]:
+    """
+    Hash a list of files and turn them into FileRecord objects.
+ 
+    Returns a tuple of (records, unreadable_relative_paths) so callers
+    can report on files that exist but could not be hashed, rather than
+    silently dropping them.
+    """
+    resolved_root = target_dir.resolve()
+    records: list[FileRecord] = []
+    unreadable: list[str] = []
+ 
+    for file_path in files:
+        rel_path = file_path.resolve().relative_to(resolved_root).as_posix()
+        try:
+            digest = sha256_of_file(file_path)
+            size = file_path.stat().st_size
+        except (HashingError, OSError):
+            unreadable.append(rel_path)
+            continue
+        records.append(FileRecord(path=rel_path, sha256=digest, size=size))
+ 
+    return records, unreadable
+ 
+ 
+def compare_to_baseline(
+    baseline_records: list[FileRecord],
+    current_records: list[FileRecord],
+    unreadable_paths: list[str],
+) -> tuple[list[ScanResultEntry], ScanSummary]:
+    """
+    Compare a baseline snapshot against a current snapshot.
+ 
+    This is pure logic with no file I/O, which makes it straightforward
+    to unit test: feed it two lists of FileRecord and check the output.
+    """
+    baseline_by_path = {r.path: r for r in baseline_records}
+    current_by_path = {r.path: r for r in current_records}
+ 
+    all_paths = set(baseline_by_path) | set(current_by_path) | set(unreadable_paths)
+    entries: list[ScanResultEntry] = []
+    summary = ScanSummary()
+ 
+    for path in sorted(all_paths):
+        baseline_record = baseline_by_path.get(path)
+        current_record = current_by_path.get(path)
+ 
+        if path in unreadable_paths:
+            status = FileStatus.UNREADABLE
+            summary.unreadable += 1
+        elif baseline_record is None and current_record is not None:
+            status = FileStatus.NEW
+            summary.new += 1
+        elif baseline_record is not None and current_record is None:
+            status = FileStatus.DELETED
+            summary.deleted += 1
+        elif baseline_record.sha256 != current_record.sha256:
+            status = FileStatus.MODIFIED
+            summary.modified += 1
+        else:
+            status = FileStatus.UNCHANGED
+            summary.unchanged += 1
+ 
+        entries.append(
+            ScanResultEntry(
+                path=path,
+                status=status,
+                baseline_hash=baseline_record.sha256 if baseline_record else None,
+                current_hash=current_record.sha256 if current_record else None,
+            )
+        )
+        summary.total += 1
+        
+    return entries, summary

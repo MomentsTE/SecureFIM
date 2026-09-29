@@ -39,11 +39,19 @@ def _configure_logging(log_path: Path, verbose: bool) -> None:
 
 def _print_header(title: str, target: Path) -> None:
 
-    print("SECUREFIM")
-    print(DIVIDER)
-    print(title)
-    print(f"Target: {target}")
-    print(f"Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    # print("SECUREFIM")
+    # print(DIVIDER)
+    # print(title)
+    # print(f"Target: {target}")
+    # print(f"Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+
+    print(f"""
+    SECUREFIM
+    {DIVIDER}
+    {title}
+    Target      :    {target}
+    Starterd    :    {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+    """)
     print()
 
 def _print_results(entries: list[ScanResultEntry]) -> None: 
@@ -58,13 +66,22 @@ def _print_results(entries: list[ScanResultEntry]) -> None:
 
 
 def _print_summary(summary: ScanSummary) -> None:
-    print("SUMMARY")
-    print(DIVIDER)
-    print(f"Files scanned: {summary.total}")
-    print(f"Unchangred:     {summary.unchanged}")
-    print(f"Modified:      {summary.modified}")
-    print(f"New:           {summary.new}")
-    print(f"Deleted:       {summary.deleted}")
+
+    print(f"""
+        SUMMARY
+        {DIVIDER}
+
+        Files scanned   :  {summary.total}
+        Unchangred      :  {summary.unchanged}
+        Modified        :  {summary.modified}
+        New             :  {summary.new}
+        Deleted         :  {summary.deleted}
+
+
+    """)
+
+
+
     if summary.unreadable:
         print(f"Unreadable:    {summary.unreadable}")
     print()
@@ -92,13 +109,23 @@ def cmd_baseline(args: argparse.Namespace) -> int:
         print(f"Error: {exc}", file=sys.stderr)
         return EXIT_USAGE_ERROR
 
-    print("SECUREFIM")
-    print(DIVIDER)
-    print("Baseline Created")
-    print(f"Target:   {target_dir.resolve()}")
-    print(f"Baseline:  {baseline_path.resolve()}")
-    print()
-    print(f"Files recorded:  {len(records)}")
+    # print("SECUREFIM")
+    # print(DIVIDER)
+    # print("Baseline Created")
+    # print(f"Target:   {target_dir.resolve()}")
+    # print(f"Baseline:  {baseline_path.resolve()}")
+    # print()
+    # print(f"Files recorded:  {len(records)}")
+
+    print(f"""
+    SECUREFIM
+    {DIVIDER}
+    Baseline created
+    Targert         :   {target_dir.resolve()}
+    Baseline        :   {baseline_path.resolve()}
+
+    Files recorded  :   {len(records)}
+    """)
     if unreadable:
         print(f"Files skipped (unreadable): {len(unreadable)}")
         for path in unreadable:
@@ -147,14 +174,25 @@ def cmd_status(args: argparse.Namespace) -> int:
         print(f"Error: {exc}", file=sys.stderr)
         return EXIT_USAGE_ERROR
 
-    print("SECUREFIM")
-    print(DIVIDER)
-    print("Baseline Status")
-    print(DIVIDER)
-    print(f"Target directory: {baseline.target_dir}")
-    print(f"Created at:       {baseline.created_at}")
-    print(f"Schema version:   {baseline.schema_version}")
-    print(f"Files tracked:    {len(baseline.records)}")
+    # print("SECUREFIM")
+    # print(DIVIDER)
+    # print("Baseline Status")
+    # print(DIVIDER)
+    # print(f"Target directory: {baseline.target_dir}")
+    # print(f"Created at:       {baseline.created_at}")
+    # print(f"Schema version:   {baseline.schema_version}")
+    # print(f"Files tracked:    {len(baseline.records)}")
+
+    print(f"""
+    SECUREFIM
+    {DIVIDER}
+    Baseline Status
+    {DIVIDER}
+    Target directory    :   {baseline.target_dir}
+    Created at          :   {baseline.created_at}
+    Schema version      :   {baseline.schema_version}
+    Files tracked       :   {len(baseline.records)}
+    """)
     return EXIT_OK
 
 
